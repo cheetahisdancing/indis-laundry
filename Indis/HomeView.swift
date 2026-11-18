@@ -18,23 +18,28 @@ struct HomeView: View {
                     summary
                     queueBanner
 
-                    Text("세탁기 · 건조기")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Theme.subtle)
-                        .padding(.top, 4)
+                    ForEach(store.floors, id: \.self) { floor in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("\(floor)층")
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(Theme.subtle)
+                                .padding(.top, 4)
+                                .accessibilityAddTraits(.isHeader)
 
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(store.machines) { machine in
-                            Button {
-                                selectedMachineID = machine.id
-                            } label: {
-                                MachineCard(
-                                    machine: machine,
-                                    now: store.now,
-                                    isNotifying: store.isNotifying(machine)
-                                )
+                            LazyVGrid(columns: columns, spacing: 12) {
+                                ForEach(store.machines(onFloor: floor)) { machine in
+                                    Button {
+                                        selectedMachineID = machine.id
+                                    } label: {
+                                        MachineCard(
+                                            machine: machine,
+                                            now: store.now,
+                                            isNotifying: store.isNotifying(machine)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -71,15 +76,19 @@ struct HomeView: View {
 
     private var roomPicker: some View {
         Menu {
-            ForEach(store.rooms) { room in
-                Button(room.name) {
-                    store.selectedRoomID = room.id
+            ForEach(store.roomGroups, id: \.self) { group in
+                Section(group) {
+                    ForEach(store.rooms(in: group)) { room in
+                        Button(room.name) {
+                            store.selectedRoomID = room.id
+                        }
+                    }
                 }
             }
         } label: {
             HStack(spacing: 10) {
                 SVGIcon(name: "IconRoom", size: 20)
-                Text(store.currentRoom.name)
+                Text("\(store.currentRoom.name) 세탁실")
                     .font(.body.weight(.medium))
                     .foregroundStyle(Theme.ink)
                 Spacer()
@@ -95,7 +104,7 @@ struct HomeView: View {
                     .strokeBorder(Theme.border, lineWidth: 1)
             }
         }
-        .accessibilityLabel("세탁실 선택, 현재 \(store.currentRoom.name)")
+        .accessibilityLabel("기숙사 선택, 현재 \(store.currentRoom.name)")
     }
 
     // MARK: - 요약 카드

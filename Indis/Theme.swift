@@ -72,7 +72,8 @@ struct SVGIcon: View {
     }
 }
 
-/// 기기 아이콘 + 오른쪽 아래 상태 배지
+/// 기기 아이콘 + 오른쪽 아래 상태 배지.
+/// 사용 중일 때는 문 안의 드럼이 빙글빙글 돌아갑니다.
 struct MachineIcon: View {
     let kind: MachineKind
     let state: DisplayState
@@ -80,7 +81,16 @@ struct MachineIcon: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            SVGIcon(name: kind.iconName, size: size, color: state.color)
+            ZStack(alignment: .topLeading) {
+                if state.isSpinning {
+                    SVGIcon(name: kind.bodyIconName, size: size, color: state.color)
+                    SpinningDrum(kind: kind, color: state.color, size: size)
+                } else {
+                    SVGIcon(name: kind.iconName, size: size, color: state.color)
+                }
+            }
+            .frame(width: size, height: size)
+
             Circle()
                 .fill(state.color)
                 .frame(width: size * 0.48, height: size * 0.48)
@@ -93,6 +103,39 @@ struct MachineIcon: View {
                 .offset(x: size * 0.16, y: size * 0.1)
         }
         .frame(width: size, height: size, alignment: .topLeading)
+        .accessibilityHidden(true)
+    }
+}
+
+/// 세탁기 문(원) 안에서 회전하는 드럼
+struct SpinningDrum: View {
+    let kind: MachineKind
+    let color: Color
+    let size: CGFloat
+    /// 한 바퀴 도는 데 걸리는 시간(초)
+    var period: Double = 1.4
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        // 아이콘은 24×24 격자. 문 중심은 (12, 14.2), 반지름 4.6
+        let unit = size / 24
+        TimelineView(.animation(paused: reduceMotion)) { context in
+            let t = context.date.timeIntervalSinceReferenceDate
+            let angle = reduceMotion ? 0 : (t.truncatingRemainder(dividingBy: period) / period) * 360
+            ZStack {
+                // 문 안쪽 내용물(물결/바람)이 회전
+                SVGIcon(name: kind.drumIconName, size: 9.2 * unit, color: color)
+                // 문 테두리를 따라 도는 굵은 호
+                Circle()
+                    .trim(from: 0, to: 0.22)
+                    .stroke(color, style: StrokeStyle(lineWidth: 2.4 * unit, lineCap: .round))
+                    .frame(width: 9.2 * unit, height: 9.2 * unit)
+            }
+            .rotationEffect(.degrees(angle))
+            .position(x: 12 * unit, y: 14.2 * unit)
+        }
+        .frame(width: size, height: size)
         .accessibilityHidden(true)
     }
 }

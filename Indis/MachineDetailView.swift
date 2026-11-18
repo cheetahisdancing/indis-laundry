@@ -53,6 +53,14 @@ struct MachineDetailView: View {
                     Text(state.label)
                         .font(.headline)
                         .foregroundStyle(state.color)
+                    if let course = machine.course, state != .available, state != .broken {
+                        Text("\(course.name) 코스 · \(Int(course.minutes))분")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Theme.ink)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Theme.mutedFill, in: Capsule())
+                    }
                     if let left = machine.remainingSeconds(at: store.now) {
                         Text(Machine.clockText(left))
                             .font(.system(size: 44, weight: .bold, design: .rounded))
@@ -93,7 +101,8 @@ struct MachineDetailView: View {
                     .font(.footnote)
                     .foregroundStyle(Theme.subtle)
                 ForEach(WashCourse.courses(for: machine.kind)) { course in
-                    PrimaryButton(title: course.name, icon: "IconTimer") {
+                    PrimaryButton(title: course.buttonLabel, icon: "IconTimer",
+                                  filled: course.id != "demo") {
                         store.start(machine.id, course: course)
                     }
                 }
@@ -108,7 +117,11 @@ struct MachineDetailView: View {
                 }
 
             case .pickup:
-                PrimaryButton(title: "빨래 꺼냈어요", icon: "IconMyLaundry") {
+                if !machine.startedByMe {
+                    ownerReminder(machine)
+                }
+                PrimaryButton(title: "빨래 꺼냈어요", icon: "IconMyLaundry",
+                              filled: machine.startedByMe) {
                     store.markCollected(machine.id)
                 }
 
@@ -132,6 +145,44 @@ struct MachineDetailView: View {
                     .frame(height: 44)
                 }
                 .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+extension MachineDetailView {
+    /// 수거 대기 3분이 지나면 세탁물 주인에게 알림 보내기
+    @ViewBuilder
+    func ownerReminder(_ machine: Machine) -> some View {
+        let now = store.now
+        let wait = machine.secondsUntilRemindable(at: now)
+
+        VStack(spacing: 8) {
+            if !machine.isPickupOverdue(at: now) {
+                Text("끝난 지 3분이 지나면 세탁물 주인에게 알림을 보낼 수 있어요 · \(Machine.clockText(wait)) 남음")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.subtle)
+                    .multilineTextAlignment(.center)
+            } else if wait > 0 {
+                HStack(spacing: 8) {
+                    SVGIcon(name: "IconAvailable", size: 20, color: Theme.primary)
+                    Text("주인에게 알림을 보냈어요")
+                        .font(.body.weight(.bold))
+                        .foregroundStyle(Theme.primary)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(Theme.primarySoft, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                Text("\(Int(wait.rounded(.up)))초 뒤에 다시 보낼 수 있어요")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.subtle)
+            } else {
+                PrimaryButton(title: "세탁물 주인에게 알림 보내기", icon: "IconBell") {
+                    store.remindOwner(machine.id)
+                }
+                Text("프로토타입에서는 주인이 받을 알림이 이 기기에 표시돼요.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.subtle)
             }
         }
     }
