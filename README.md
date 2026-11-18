@@ -19,9 +19,7 @@
 1. GitHub에 새 저장소를 만들고 이 폴더 전체를 올립니다. (`.github` 폴더 포함 / **공개 저장소면 무료**)
 2. 올리면 `Actions` 탭에서 **iOS Simulator Build**가 자동으로 돌아갑니다. (5~10분)
    - 초록 체크 = 빌드 성공. 빨간 X면 로그의 오류 메시지를 확인하세요.
-3. 끝난 실행을 눌러 아래 **Artifacts**에서 두 파일을 받습니다.
-   - `screenshot` → 시뮬레이터에서 실제로 띄운 홈 화면 사진
-   - `Indis-simulator` → 받은 zip 안에 `Indis-simulator.zip`이 들어 있어요. 이 안쪽 zip을 씁니다.
+3. 끝난 실행을 눌러 아래 **Artifacts**에서 `Indis-simulator`를 받습니다. 받은 zip 안에 `Indis-simulator.zip`이 들어 있어요. 이 안쪽 zip을 씁니다.
 4. [appetize.io](https://appetize.io)에 가입하고 `Indis-simulator.zip`을 업로드하면, 브라우저에서 iPhone 화면으로 앱을 직접 눌러볼 수 있어요. 공유 링크로 팀원·사용자 테스트에도 쓸 수 있습니다. (무료 플랜은 사용 시간 제한이 있어요)
 
 ## 시연 시나리오 (사용자 테스트용)
