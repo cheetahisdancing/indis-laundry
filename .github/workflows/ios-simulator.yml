@@ -1,0 +1,58 @@
+# GitHub의 Mac 서버에서 앱을 빌드하고,
+# 1) Appetize.io에 올릴 시뮬레이터용 앱(Indis-simulator.zip)
+# 2) 시뮬레이터에서 실제로 띄운 홈 화면 스크린샷(home.png)
+# 을 Actions 결과(Artifacts)로 남깁니다.
+name: iOS Simulator Build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Build for iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Indis.xcodeproj \
+            -scheme Indis \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Zip app for Appetize
+        run: |
+          cd build/Build/Products/Debug-iphonesimulator
+          zip -qr "$GITHUB_WORKSPACE/Indis-simulator.zip" Indis.app
+
+      - name: Run on simulator and take screenshot
+        continue-on-error: true
+        run: |
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k,v in d.items() if 'iOS' in k for x in v if x['name'].startswith('iPhone')))")
+          xcrun simctl boot "$DEVICE"
+          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl install "$DEVICE" build/Build/Products/Debug-iphonesimulator/Indis.app
+          xcrun simctl launch "$DEVICE" edu.postech.indis.laundry
+          sleep 10
+          xcrun simctl io "$DEVICE" screenshot home.png
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Indis-simulator
+          path: Indis-simulator.zip
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshot
+          path: home.png
+          if-no-files-found: ignore
