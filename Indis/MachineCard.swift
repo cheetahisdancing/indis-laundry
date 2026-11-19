@@ -5,6 +5,9 @@ struct MachineCard: View {
     let machine: Machine
     let now: Date
     var isNotifying: Bool = false
+    /// 즐겨찾기 목록에서 보여줄 때 건물 이름
+    var roomName: String? = nil
+    var isFavorite: Bool = false
 
     var body: some View {
         let state = machine.displayState(at: now)
@@ -14,6 +17,9 @@ struct MachineCard: View {
             HStack(alignment: .top) {
                 MachineIcon(kind: machine.kind, state: state, size: 44)
                 Spacer()
+                if isFavorite {
+                    SVGIcon(name: "IconStarFill", size: 16, color: Color(hex: 0xA16207))
+                }
                 if overdue {
                     Text("3분 초과")
                         .font(.caption2.weight(.bold))
@@ -27,6 +33,12 @@ struct MachineCard: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
+                if let roomName {
+                    Text(roomName)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Theme.subtle)
+                        .lineLimit(1)
+                }
                 Text(machine.name)
                     .font(.headline)
                     .foregroundStyle(Theme.ink)
@@ -66,7 +78,9 @@ struct MachineCard: View {
     }
 
     private func accessibilityText(state: DisplayState) -> String {
-        var text = "\(machine.name), \(machine.statusText(at: now))"
+        var text = isFavorite ? "즐겨찾기, " : ""
+        if let roomName { text += roomName + " " }
+        text += "\(machine.name), \(machine.statusText(at: now))"
         if let course = machine.course, state != .available, state != .broken {
             text += ", \(course.name) 코스"
         }

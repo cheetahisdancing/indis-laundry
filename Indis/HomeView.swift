@@ -14,9 +14,9 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    favoritesSection
                     roomPicker
                     summary
-                    queueBanner
 
                     ForEach(store.floors, id: \.self) { floor in
                         VStack(alignment: .leading, spacing: 8) {
@@ -34,7 +34,8 @@ struct HomeView: View {
                                         MachineCard(
                                             machine: machine,
                                             now: store.now,
-                                            isNotifying: store.isNotifying(machine)
+                                            isNotifying: store.isNotifying(machine),
+                                            isFavorite: store.isFavorite(machine)
                                         )
                                     }
                                     .buttonStyle(.plain)
@@ -124,73 +125,75 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - 대기 줄 안내
+    // MARK: - 즐겨찾는 기기
 
-    @ViewBuilder
-    private var queueBanner: some View {
-        if store.isInQueueHere, let position = store.myQueuePosition {
-            HStack(spacing: 12) {
-                SVGIcon(name: "IconQueue", size: 24, color: Theme.primary)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("대기 \(position)번째")
-                        .font(.headline)
-                        .foregroundStyle(Theme.primary)
-                    Text("세탁기가 비면 알림으로 알려드릴게요.")
+    private var favoritesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                SVGIcon(name: "IconStarFill", size: 16, color: Color(hex: 0xA16207))
+                Text("즐겨찾는 기기")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Theme.ink)
+                    .accessibilityAddTraits(.isHeader)
+            }
+
+            if store.favoriteMachines.isEmpty {
+                HStack(spacing: 10) {
+                    SVGIcon(name: "IconStar", size: 22, color: Theme.subtle)
+                    Text("자주 쓰는 세탁기를 눌러 상세 화면 위쪽의 별을 누르면 여기에서 바로 상태를 볼 수 있어요.")
                         .font(.footnote)
                         .foregroundStyle(Theme.subtle)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer()
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(Theme.border, style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                }
+            } else {
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(store.favoriteMachines) { item in
+                        Button {
+                            selectedMachineID = item.machine.id
+                        } label: {
+                            MachineCard(
+                                machine: item.machine,
+                                now: store.now,
+                                isNotifying: store.isNotifying(item.machine),
+                                roomName: item.room.name,
+                                isFavorite: true
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
-            .padding(14)
-            .background(Theme.primarySoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
+        .padding(.bottom, 4)
     }
 
     // MARK: - 하단 버튼
 
     private var bottomBar: some View {
-        HStack(spacing: 10) {
-            Button {
-                if store.isInQueueHere {
-                    store.leaveQueue()
-                } else {
-                    NotificationManager.shared.requestPermission()
-                    store.joinQueue()
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    SVGIcon(name: "IconQueue", size: 22, color: store.isInQueueHere ? Theme.primary : .white)
-                    Text(store.isInQueueHere ? "대기 취소" : "대기 줄 서기 · \(store.queueCount)명")
-                        .font(.body.weight(.bold))
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .foregroundStyle(store.isInQueueHere ? Theme.primary : .white)
-                .background(
-                    store.isInQueueHere ? Theme.primarySoft : Theme.primary,
-                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-                )
+        Button {
+            store.setNotifyWhenFree(!store.notifyWhenFree)
+        } label: {
+            HStack(spacing: 8) {
+                SVGIcon(name: "IconBell", size: 22, color: store.notifyWhenFree ? Theme.primary : .white)
+                Text(store.notifyWhenFree ? "빈 세탁기 알림 켜짐 · 끄기" : "빈 세탁기 생기면 알림 받기")
+                    .font(.body.weight(.bold))
             }
-            .buttonStyle(.plain)
-            .disabled(store.myQueuePosition != nil && !store.isInQueueHere)
-
-            Button {
-                store.setNotifyWhenFree(!store.notifyWhenFree)
-            } label: {
-                SVGIcon(name: "IconBell", size: 22, color: store.notifyWhenFree ? .white : Theme.ink)
-                    .frame(width: 52, height: 52)
-                    .background(
-                        store.notifyWhenFree ? Theme.primary : Theme.card,
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    )
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .strokeBorder(store.notifyWhenFree ? Color.clear : Theme.border, lineWidth: 1)
-                    }
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(store.notifyWhenFree ? "빈 세탁기 알림 끄기" : "빈 세탁기 생기면 알림 받기")
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .foregroundStyle(store.notifyWhenFree ? Theme.primary : .white)
+            .background(
+                store.notifyWhenFree ? Theme.primarySoft : Theme.primary,
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+            )
         }
+        .buttonStyle(.plain)
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 8)

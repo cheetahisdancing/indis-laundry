@@ -20,6 +20,19 @@ struct MachineDetailView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if let machine = store.machine(id: machineID) {
+                        let favorite = store.isFavorite(machine)
+                        Button {
+                            store.toggleFavorite(machine)
+                        } label: {
+                            SVGIcon(name: favorite ? "IconStarFill" : "IconStar",
+                                    size: 24,
+                                    color: favorite ? Color(hex: 0xA16207) : Theme.ink)
+                        }
+                        .accessibilityLabel(favorite ? "즐겨찾기에서 빼기" : "즐겨찾기에 추가")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("닫기") { dismiss() }
                 }

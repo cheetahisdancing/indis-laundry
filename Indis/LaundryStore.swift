@@ -12,11 +12,8 @@ final class LaundryStore {
     var selectedRoomID: String
     private(set) var machinesByRoom: [String: [Machine]]
 
-    /// 건물마다 대기 줄에 선 인원 (예시)
-    private(set) var queueCountByRoom: [String: Int]
-    /// 내 대기 순서 (줄 안 섰으면 nil)
-    private(set) var myQueuePosition: Int? = nil
-    private(set) var myQueueRoomID: String? = nil
+    /// 즐겨찾는 기기 (건물·층·종류·번호로 만든 고정 키, 앱을 껐다 켜도 유지)
+    private(set) var favoriteKeys: Set<String> = []
 
     /// '빈 세탁기 생기면 알림' 켜짐 여부
     var notifyWhenFree = false
@@ -44,13 +41,11 @@ final class LaundryStore {
         var rng = SeededGenerator(seed: 2026)
         let start = Date()
         var machines: [String: [Machine]] = [:]
-        var queues: [String: Int] = [:]
         for (index, room) in rooms.enumerated() {
             machines[room.id] = LaundryStore.sampleMachines(roomIndex: index, now: start, rng: &rng)
-            queues[room.id] = Int.random(in: 0...3, using: &rng)
         }
         self.machinesByRoom = machines
-        self.queueCountByRoom = queues
+        self.favoriteKeys = Set(UserDefaults.standard.stringArray(forKey: LaundryStore.favoritesDefaultsKey) ?? [])
 
         let t = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             self?.tick()
@@ -89,12 +84,41 @@ final class LaundryStore {
             .sorted { ($0.kind == .washer ? 0 : 1, $0.number) < ($1.kind == .washer ? 0 : 1, $1.number) }
     }
 
-    var queueCount: Int {
-        queueCountByRoom[selectedRoomID] ?? 0
+    // MARK: - 즐겨찾기
+
+    private static let favoritesDefaultsKey = "favoriteMachines"
+
+    /// 건물·층·종류·번호로 만든 고정 키 (UUID는 실행할 때마다 바뀌므로)
+    private func favoriteKey(for machine: Machine) -> String? {
+        guard let roomID = roomID(of: machine.id) else { return nil }
+        return "\(roomID)|\(machine.floor)|\(machine.kind.rawValue)|\(machine.number)"
     }
 
-    var isInQueueHere: Bool {
-        myQueuePosition != nil && myQueueRoomID == selectedRoomID
+    func isFavorite(_ machine: Machine) -> Bool {
+        guard let key = favoriteKey(for: machine) else { return false }
+        return favoriteKeys.contains(key)
+    }
+
+    func toggleFavorite(_ machine: Machine) {
+        guard let key = favoriteKey(for: machine) else { return }
+        if favoriteKeys.contains(key) {
+            favoriteKeys.remove(key)
+        } else {
+            favoriteKeys.insert(key)
+        }
+        UserDefaults.standard.set(Array(favoriteKeys).sorted(), forKey: LaundryStore.favoritesDefaultsKey)
+    }
+
+    /// 즐겨찾는 기기 전체 (건물 순서 → 층 → 세탁기/건조기 → 번호)
+    var favoriteMachines: [FavoriteItem] {
+        var result: [FavoriteItem] = []
+        for room in rooms {
+            let list = (machinesByRoom[room.id] ?? [])
+                .filter { favoriteKeys.contains("\(room.id)|\($0.floor)|\($0.kind.rawValue)|\($0.number)") }
+                .sorted { ($0.floor, $0.kind == .washer ? 0 : 1, $0.number) < ($1.floor, $1.kind == .washer ? 0 : 1, $1.number) }
+            for m in list { result.append(FavoriteItem(room: room, machine: m)) }
+        }
+        return result
     }
 
     func machine(id: UUID) -> Machine? {
@@ -199,21 +223,6 @@ final class LaundryStore {
         return true
     }
 
-    func joinQueue() {
-        guard myQueuePosition == nil else { return }
-        let count = (queueCountByRoom[selectedRoomID] ?? 0) + 1
-        queueCountByRoom[selectedRoomID] = count
-        myQueuePosition = count
-        myQueueRoomID = selectedRoomID
-    }
-
-    func leaveQueue() {
-        guard let roomID = myQueueRoomID else { return }
-        queueCountByRoom[roomID] = max((queueCountByRoom[roomID] ?? 1) - 1, 0)
-        myQueuePosition = nil
-        myQueueRoomID = nil
-    }
-
     func setNotifyWhenFree(_ on: Bool) {
         notifyWhenFree = on
         if on { NotificationManager.shared.requestPermission() }
@@ -267,25 +276,11 @@ final class LaundryStore {
         for m in freed { machineBecameFree(m) }
     }
 
-    /// 기기가 비었을 때: 대기 줄 당기기 + 알림
+    /// 기기가 비었을 때: 빈 세탁기 알림
     private func machineBecameFree(_ machine: Machine) {
         guard machine.kind == .washer,
               let roomID = roomID(of: machine.id) else { return }
         let roomName = rooms.first { $0.id == roomID }?.name ?? "세탁실"
-
-        if myQueueRoomID == roomID, let position = myQueuePosition {
-            if position <= 1 {
-                myQueuePosition = nil
-                myQueueRoomID = nil
-                NotificationManager.shared.sendNow(
-                    title: "내 차례예요!",
-                    body: "\(roomName) \(machine.name)이 비었어요."
-                )
-            } else {
-                myQueuePosition = position - 1
-            }
-        }
-        queueCountByRoom[roomID] = max((queueCountByRoom[roomID] ?? 0) - 1, 0)
 
         if notifyWhenFree && roomID == selectedRoomID {
             NotificationManager.shared.sendNow(
@@ -349,4 +344,11 @@ final class LaundryStore {
             return .pickup(since: now.addingTimeInterval(-60), course: .dryStandard)
         }
     }
+}
+
+/// 즐겨찾기 목록의 한 줄 (어느 건물의 어떤 기기인지)
+struct FavoriteItem: Identifiable {
+    let room: LaundryRoom
+    let machine: Machine
+    var id: UUID { machine.id }
 }
