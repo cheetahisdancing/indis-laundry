@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- washerdrum.svg 에서 변환 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="9.2" android:viewportHeight="9.2">
+    <group android:translateX="-7.4" android:translateY="-9.6">
+        <path android:pathData="M8.9 14.2c1-.9 2.1-.9 3.1 0s2.1.9 3.1 0" android:strokeColor="#FF000000" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+    </group>
+</vector>

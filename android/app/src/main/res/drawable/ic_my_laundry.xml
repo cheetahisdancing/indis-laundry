@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- mylaundry.svg 에서 변환 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <group android:translateX="-0" android:translateY="-0">
+        <path android:pathData="M8.5 3L3 6.2l2 3.8 2.5-1V21h9V9l2.5 1 2-3.8L15.5 3c-.6 1.4-1.9 2.3-3.5 2.3S9.1 4.4 8.5 3z" android:strokeColor="#FF000000" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+    </group>
+</vector>

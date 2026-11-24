@@ -22,6 +22,21 @@
 3. 끝난 실행을 눌러 아래 **Artifacts**에서 `Indis-simulator`를 받습니다. 받은 zip 안에 `Indis-simulator.zip`이 들어 있어요. 이 안쪽 zip을 씁니다.
 4. [appetize.io](https://appetize.io)에 가입하고 `Indis-simulator.zip`을 업로드하면, 브라우저에서 iPhone 화면으로 앱을 직접 눌러볼 수 있어요. 공유 링크로 팀원·사용자 테스트에도 쓸 수 있습니다. (무료 플랜은 사용 시간 제한이 있어요)
 
+## 안드로이드에서 실행하기
+
+`android/` 폴더에 같은 기능의 안드로이드 앱(Kotlin + Jetpack Compose)이 들어 있어요.
+
+1. GitHub에 올리면 `Actions` 탭에서 **Android APK Build**가 자동으로 돌아갑니다. (3~5분)
+2. 끝나면 저장소 오른쪽 **Releases → `android-latest`** 에 `Indis.apk`가 올라와요.
+   휴대폰에서 아래 링크를 열면 바로 받을 수 있어요.
+   `https://github.com/cheetahisdancing/indis-laundry/releases/download/android-latest/Indis.apk`
+3. 받은 파일을 눌러 설치합니다. 처음이면 "출처를 알 수 없는 앱 설치 허용"을 켜 달라고 나와요.
+4. 알림 버튼을 처음 누를 때 알림 권한을 물어봐요. 허용해야 끝남/빈 세탁기 알림이 떠요.
+
+- Android 8.0 이상에서 동작해요.
+- PC에서 직접 빌드하려면 Android Studio로 `android` 폴더를 열고 ▶ 를 누르세요.
+- 화면·동작은 iOS 버전과 같아요. 로직은 `LaundryStore.kt`, 화면은 `HomeScreen.kt` / `MachineDetail.kt`에 있어요.
+
 ## 시연 시나리오 (사용자 테스트용)
 
 건물: 생활관 1~10동, 여사 1~3동. 건물마다 1~3층, 층마다 세탁기 2대(세탁기1·2) + 건조기 1대.

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- timer.svg 에서 변환 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <group android:translateX="-0" android:translateY="-0">
+        <path android:pathData="M4,13A8,8 0 1 1 20,13A8,8 0 1 1 4,13Z" android:strokeColor="#FF000000" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+        <path android:pathData="M12 9v4l2.5 2M10 2.5h4M19 6l1.5-1.5" android:strokeColor="#FF000000" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+    </group>
+</vector>

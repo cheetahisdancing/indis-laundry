@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- pickup.svg 에서 변환 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <group android:translateX="-0" android:translateY="-0">
+        <path android:pathData="M4 10h16l-1.6 9.2a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8z" android:strokeColor="#FF000000" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+        <path android:pathData="M8 10l3-6M16 10l-3-6" android:strokeColor="#FF000000" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+        <path android:pathData="M9.5 14v3M14.5 14v3" android:strokeColor="#FF000000" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+    </group>
+</vector>
