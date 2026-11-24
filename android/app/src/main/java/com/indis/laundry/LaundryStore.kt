@@ -187,7 +187,7 @@ class LaundryStore(app: Application) : AndroidViewModel(app) {
         return true
     }
 
-    fun setNotifyWhenFree(on: Boolean) {
+    fun changeNotifyWhenFree(on: Boolean) {
         notifyWhenFree = on
     }
 

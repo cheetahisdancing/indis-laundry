@@ -72,8 +72,8 @@ fun HomeScreen(store: LaundryStore, withNotificationPermission: (() -> Unit) -> 
             BottomBar(
                 on = store.notifyWhenFree,
                 onClick = {
-                    if (store.notifyWhenFree) store.setNotifyWhenFree(false)
-                    else withNotificationPermission { store.setNotifyWhenFree(true) }
+                    if (store.notifyWhenFree) store.changeNotifyWhenFree(false)
+                    else withNotificationPermission { store.changeNotifyWhenFree(true) }
                 },
             )
         },
